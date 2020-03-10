@@ -19,6 +19,7 @@ class UNet(nn.Module):
             layer = DownsampleBlock(last_depth, num_filters, kernel_size, weight_std=weight_std, leaky_slope=leaky_slope) if num_filters > 0 else None
             self.downs.append(layer)
             last_depth = num_filters
+        self.downs = nn.ModuleList(self.downs)
 
         # Create upsample part ('decoder') in reverse order
         for i, (num_filters, kernel_size) in reversed(list(enumerate(zip(nu, ku)))):
@@ -29,12 +30,13 @@ class UNet(nn.Module):
             last_depth = num_filters
 
         self.ups = list(reversed(self.ups))
+        self.ups = nn.ModuleList(self.ups)
 
         # Create skip connection blocks
         for i, (num_filters, kernel_size) in enumerate(zip(ns, ks)):
             layer = SkipBlock(nd[i], num_filters, kernel_size, weight_std=weight_std, leaky_slope=leaky_slope) if num_filters > 0 else None
             self.skips.append(layer)
-
+        self.skips = nn.ModuleList(self.skips)
 
         final_conv = nn.Conv2d(last_depth, out_channels, 1)
         self.final = nn.Sequential(final_conv, nn.Sigmoid())
