@@ -31,7 +31,7 @@ def tensors_as_images(tensors, nrows=1, figsize=(8, 8), titles=[],
         image_tensor = tensors[i]
         assert image_tensor.dim() == 3  # Make sure shape is CxWxH
 
-        image = image_tensor.numpy()
+        image = image_tensor.cpu().numpy()
         image = image.transpose(1, 2, 0)
         image = image.squeeze()  # remove singleton dimensions if any exist
 
