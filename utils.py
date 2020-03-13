@@ -30,14 +30,16 @@ def tensors_as_images(tensors, nrows=1, figsize=(8, 8), titles=[],
 
         image_tensor = tensors[i]
         assert image_tensor.dim() == 3  # Make sure shape is CxWxH
-
         image = image_tensor.cpu().numpy()
         image = image.transpose(1, 2, 0)
         image = image.squeeze()  # remove singleton dimensions if any exist
 
+
         # Scale to range 0..1
         min, max = np.min(image), np.max(image)
         image = (image-min) / (max-min)
+        if len(image.shape) == 2:
+            image = 1-image
 
         ax.imshow(image, cmap=cmap)
 
@@ -47,7 +49,7 @@ def tensors_as_images(tensors, nrows=1, figsize=(8, 8), titles=[],
     # If there are more axes than tensors, remove their frames
     for j in range(num_tensors, len(axes_flat)):
         axes_flat[j].axis('off')
-
+    plt.show()
     return fig, axes
 
 
@@ -124,4 +126,12 @@ def crop_image(img, d=32):
 
     img_cropped = img.crop(bbox)
     return img_cropped
+
+
+def get_bernoulli_mask(dims, p):
+    assert isinstance(dims, tuple)
+    assert len(dims) == 3
+    assert 0 <= p <= 1
+    mask = np.random.choice([0, 1], size=dims, p=[p, 1-p])
+    return mask
 
