@@ -118,7 +118,7 @@ def generator_loss_fn(y_generated, data_label=0):
 def train_batch(dsc_model: Discriminator, gen_model: UNet,
                 dsc_loss_fn: Callable, gen_loss_fn: Callable,
                 dsc_optimizer: Optimizer, gen_optimizer: Optimizer,
-                original_img: torch.Tensor, target_img: torch.Tensor, gen_input: torch.Tensor,
+                target_img: torch.Tensor, gen_input: torch.Tensor,
                 gen_fn: Callable = None, gen_mask: torch.Tensor = None):
     """
     Trains a GAN for over one batch, updating both the discriminator and
@@ -134,7 +134,8 @@ def train_batch(dsc_model: Discriminator, gen_model: UNet,
     dsc_optimizer.zero_grad()
 
     real_batch = target_img
-    generated_batch = gen_model(gen_input)
+    gen_output = gen_model(gen_input)
+    generated_batch = gen_output
     if gen_fn is not None:
         generated_batch = gen_fn(generated_batch, gen_mask)
     y_data = dsc_model(real_batch)
@@ -160,10 +161,7 @@ def train_batch(dsc_model: Discriminator, gen_model: UNet,
 
     gen_optimizer.step()
 
-    psnr_masked = peak_signal_noise_ratio(target_img.detach().cpu().numpy()[0],
-                                          generated_batch.detach().cpu().numpy()[0] * gen_mask.detach().cpu().numpy())
-    psnr = peak_signal_noise_ratio(original_img.numpy(), generated_batch.detach().cpu().numpy()[0])
     # ========================
 
-    return dsc_loss.item(), gen_loss.item(), psnr_masked, psnr
+    return dsc_loss.item(), gen_loss.item(), gen_output
 
