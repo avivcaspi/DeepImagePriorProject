@@ -1,7 +1,9 @@
 import math
+import torch
 
 import numpy as np
 import matplotlib.pyplot as plt
+
 import PIL
 from PIL import Image
 
@@ -135,3 +137,48 @@ def get_bernoulli_mask(dims, p):
     mask = np.random.choice([0, 1], size=dims, p=[p, 1-p])
     return mask
 
+
+def lanczos2_kernel(factor, phase=0):
+    support = 2
+    kernel_size = 4 * factor + 1
+    center = (kernel_size + 1.0) / 2.0
+    
+    kernel = np.zeros([kernel_size, kernel_size])
+    
+    for i in range(1, kernel_size+1):
+        for j in range(1, kernel_size+1):
+            
+            di = abs(i - center + phase) / factor
+            dj = abs(j - center + phase) / factor
+            
+            value = 1
+            for offset in [di, dj]:
+                if abs(offset) < 1e-9:   # if offset == 0
+                    continue
+                value *= support
+                value *= np.sin(np.pi * offset) * np.sin(np.pi * offset / support)
+                value /= (np.pi * offset) ** 2
+                
+            kernel[i-1][j-1] = value
+            
+    return kernel / kernel.sum()
+
+
+def lanczos_downsample(tensor, factor, pad_type=torch.nn.ReplicationPad2d, device='cpu'):
+    kernel_np = lanczos2_kernel(factor, phase=0.5)
+    kernel_tr = torch.from_numpy(kernel_np)
+    
+    depth = tensor.shape[1]
+    conv = torch.nn.Conv2d(depth, depth, kernel_size=kernel_tr.shape, stride=factor, padding=0).to(device)
+    
+    conv.weight.data[:] = 0
+    conv.bias.data[:] = 0
+    
+    for i in range(depth):
+        conv.weight.data[i, i] = kernel_tr
+        
+    pad_size = (kernel_np.shape[0] - 1) // 2
+    pad = pad_type(pad_size).to(device)
+        
+    return conv(pad(tensor))
+    
