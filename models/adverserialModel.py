@@ -21,7 +21,7 @@ class Discriminator(nn.Module):
         #  You can then use either an affine layer or another conv layer to
         #  flatten the features.
         # ====== YOUR CODE: ======
-        self.first_channels = 3
+        self.first_channels = in_size[0]
         self.last_channels = 512
 
         downscaling1 = nn.Sequential(
