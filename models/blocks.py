@@ -68,7 +68,7 @@ class UpsampleBlock(nn.Module):
         self.norm = norm_layer(in_channels)
 
         self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type, weight_std)
-        self.conv2 = ConvBlock(out_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type, weight_std)
+        self.conv2 = ConvBlock(out_channels, out_channels, 1, 1, norm_layer, leaky_slope, pad_type, weight_std)    # add 1x1 conv layer
 
         self.upsample = nn.Upsample(scale_factor=scale_factor, mode=method)
 
