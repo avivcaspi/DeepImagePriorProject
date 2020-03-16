@@ -181,4 +181,4 @@ def lanczos_downsample(tensor, factor, pad_type=torch.nn.ReplicationPad2d, devic
     pad = pad_type(pad_size).to(device)
         
     return conv(pad(tensor))
-    
+
