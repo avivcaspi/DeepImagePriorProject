@@ -12,7 +12,7 @@ UPSAMPLING_METHODS = [BILINEAR, NEAREST]
 class ConvBlock(nn.Module):
 
 
-    def __init__(self, in_channels, out_channels, kernel_size, stride, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING, weight_std=0.03):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING):
         nn.Module.__init__(self)
 
         pad_size = (kernel_size - stride + 1) // 2
@@ -22,7 +22,6 @@ class ConvBlock(nn.Module):
             raise NotImplementedError()
 
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride=stride)
-        nn.init.normal_(self.conv.weight, mean=0.0, std=weight_std)
 
         self.norm = norm_layer(out_channels)
         self.activation = nn.LeakyReLU(leaky_slope)
@@ -40,11 +39,11 @@ class ConvBlock(nn.Module):
 class DownsampleBlock(nn.Module):
 
 
-    def __init__(self, in_channels, out_channels, kernel_size, scale_factor=2, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING, weight_std=0.03):
+    def __init__(self, in_channels, out_channels, kernel_size, scale_factor=2, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING):
         nn.Module.__init__(self)
 
-        self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, scale_factor, norm_layer, leaky_slope, pad_type, weight_std)
-        self.conv2 = ConvBlock(out_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type, weight_std)
+        self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, scale_factor, norm_layer, leaky_slope, pad_type)
+        self.conv2 = ConvBlock(out_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type)
 
 
     def forward(self, x):
@@ -57,7 +56,7 @@ class DownsampleBlock(nn.Module):
 class UpsampleBlock(nn.Module):
 
 
-    def __init__(self, in_channels, out_channels, kernel_size, method, scale_factor=2, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING, skip_depth=0, weight_std=0.03):
+    def __init__(self, in_channels, out_channels, kernel_size, method, scale_factor=2, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING, skip_depth=0):
         nn.Module.__init__(self)
         assert method in UPSAMPLING_METHODS
 
@@ -67,8 +66,8 @@ class UpsampleBlock(nn.Module):
 
         self.norm = norm_layer(in_channels)
 
-        self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type, weight_std)
-        self.conv2 = ConvBlock(out_channels, out_channels, 1, 1, norm_layer, leaky_slope, pad_type, weight_std)    # add 1x1 conv layer
+        self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type)
+        self.conv2 = ConvBlock(out_channels, out_channels, 1, 1, norm_layer, leaky_slope, pad_type)    # add 1x1 conv layer
 
         self.upsample = nn.Upsample(scale_factor=scale_factor, mode=method)
 
@@ -90,10 +89,10 @@ class UpsampleBlock(nn.Module):
 class SkipBlock(nn.Module):
 
 
-    def __init__(self, in_channels, out_channels, kernel_size, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING, weight_std=0.03):
+    def __init__(self, in_channels, out_channels, kernel_size, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING):
         nn.Module.__init__(self)
 
-        self.conv = ConvBlock(in_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type, weight_std)
+        self.conv = ConvBlock(in_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type)
 
 
     def forward(self, x):

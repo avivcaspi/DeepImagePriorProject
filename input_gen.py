@@ -42,6 +42,7 @@ def get_noise(depth, height, width, method, noise_type='uniform', std=1./10):
         noise = meshgrid_gen(height, width)
     else:
         assert False
+        
     return noise
 
 

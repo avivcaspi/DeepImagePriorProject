@@ -140,8 +140,8 @@ def get_bernoulli_mask(dims, p):
 
 def lanczos2_kernel(factor, phase=0):
     support = 2
-    kernel_size = 4 * factor + 1
-    center = (kernel_size + 1.0) / 2.0
+    kernel_size = 4 * factor
+    center = (kernel_size + 2.0) / 2.0
     
     kernel = np.zeros([kernel_size, kernel_size])
     
@@ -164,11 +164,10 @@ def lanczos2_kernel(factor, phase=0):
     return kernel / kernel.sum()
 
 
-def lanczos_downsample(tensor, factor, pad_type=torch.nn.ReplicationPad2d, device='cpu'):
+def lanczos_downsampler(depth, factor, pad_type=torch.nn.ReplicationPad2d, device='cpu'):
     kernel_np = lanczos2_kernel(factor, phase=0.5)
     kernel_tr = torch.from_numpy(kernel_np)
     
-    depth = tensor.shape[1]
     conv = torch.nn.Conv2d(depth, depth, kernel_size=kernel_tr.shape, stride=factor, padding=0).to(device)
     
     conv.weight.data[:] = 0
@@ -177,8 +176,8 @@ def lanczos_downsample(tensor, factor, pad_type=torch.nn.ReplicationPad2d, devic
     for i in range(depth):
         conv.weight.data[i, i] = kernel_tr
         
-    pad_size = (kernel_np.shape[0] - 1) // 2
+    pad_size = (kernel_np.shape[0] - factor) // 2
     pad = pad_type(pad_size).to(device)
         
-    return conv(pad(tensor))
+    return torch.nn.Sequential(pad, conv)
 

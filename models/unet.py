@@ -6,7 +6,7 @@ from .blocks import *
 class UNet(nn.Module):
 
 
-    def __init__(self, in_channels, out_channels, nu, nd, ns, ku, kd, ks, up_method=BILINEAR, weight_std=0.03, leaky_slope=0.2):
+    def __init__(self, in_channels, out_channels, nu, nd, ns, ku, kd, ks, up_method=BILINEAR, leaky_slope=0.2):
         nn.Module.__init__(self)
 
         self.downs = []
@@ -16,7 +16,7 @@ class UNet(nn.Module):
         # Create downsample part ('encoder')
         last_depth = in_channels
         for num_filters, kernel_size in zip(nd, kd):
-            layer = DownsampleBlock(last_depth, num_filters, kernel_size, weight_std=weight_std, leaky_slope=leaky_slope) if num_filters > 0 else None
+            layer = DownsampleBlock(last_depth, num_filters, kernel_size, leaky_slope=leaky_slope) if num_filters > 0 else None
             self.downs.append(layer)
             last_depth = num_filters
         self.downs = nn.ModuleList(self.downs)
@@ -25,7 +25,7 @@ class UNet(nn.Module):
         for i, (num_filters, kernel_size) in reversed(list(enumerate(zip(nu, ku)))):
             skip_depth = ns[i]
 
-            layer = UpsampleBlock(last_depth, num_filters, kernel_size, up_method, skip_depth=skip_depth, weight_std=weight_std, leaky_slope=leaky_slope) if num_filters > 0 else None
+            layer = UpsampleBlock(last_depth, num_filters, kernel_size, up_method, skip_depth=skip_depth, leaky_slope=leaky_slope) if num_filters > 0 else None
             self.ups.append(layer)
             last_depth = num_filters
 
@@ -33,12 +33,14 @@ class UNet(nn.Module):
         self.ups = nn.ModuleList(self.ups)
 
         # Create skip connection blocks
+        last_depth = in_channels
         for i, (num_filters, kernel_size) in enumerate(zip(ns, ks)):
-            layer = SkipBlock(nd[i], num_filters, kernel_size, weight_std=weight_std, leaky_slope=leaky_slope) if num_filters > 0 else None
+            layer = SkipBlock(last_depth, num_filters, kernel_size, leaky_slope=leaky_slope) if num_filters > 0 else None
             self.skips.append(layer)
+            last_depth = nd[i]
         self.skips = nn.ModuleList(self.skips)
 
-        final_conv = nn.Conv2d(last_depth, out_channels, 1)
+        final_conv = nn.Conv2d(nu[0], out_channels, 1)
         self.final = nn.Sequential(final_conv, nn.Sigmoid())
 
 
@@ -47,12 +49,10 @@ class UNet(nn.Module):
         skips_data = []
 
         for i, down_layer in enumerate(self.downs):
+            curr_skips_data = main_data.clone() if self.skips[i] else None
+            skips_data.append(curr_skips_data)
+                
             main_data = down_layer(main_data)
-
-            if self.skips[i]:
-                skips_data.append(main_data.clone())
-            else:
-                skips_data.append(None)
 
         for i, skip_layer in enumerate(self.skips):
             if skip_layer:
