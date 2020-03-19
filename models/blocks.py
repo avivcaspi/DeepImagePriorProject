@@ -59,12 +59,13 @@ class UpsampleBlock(nn.Module):
         self.skip_depth = skip_depth
         in_channels += skip_depth
 
+        self.upsample = nn.Upsample(scale_factor=scale_factor, mode=method)
+        
         self.norm = norm_layer(in_channels)
 
         self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type)
         self.conv2 = ConvBlock(out_channels, out_channels, 1, 1, norm_layer, leaky_slope, pad_type)    # add 1x1 conv layer
 
-        self.upsample = nn.Upsample(scale_factor=scale_factor, mode=method)
 
     def forward(self, x, skip_data=None):
         if self.skip_depth > 0:
@@ -72,10 +73,11 @@ class UpsampleBlock(nn.Module):
             skip_data = nn.functional.interpolate(skip_data, size=x.shape[2:], mode=self.method)
             x = torch.cat([x, skip_data], dim=1)
 
-        out = self.norm(x)
+        out = self.upsample(x)
+        out = self.norm(out)
         out = self.conv1(out)
         out = self.conv2(out)
-        out = self.upsample(out)
+
         return out
 
 
