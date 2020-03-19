@@ -11,7 +11,6 @@ UPSAMPLING_METHODS = [BILINEAR, NEAREST]
 # Conv -> BN -> LeakyReLU
 class ConvBlock(nn.Module):
 
-
     def __init__(self, in_channels, out_channels, kernel_size, stride, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING):
         nn.Module.__init__(self)
 
@@ -26,7 +25,6 @@ class ConvBlock(nn.Module):
         self.norm = norm_layer(out_channels)
         self.activation = nn.LeakyReLU(leaky_slope)
 
-
     def forward(self, x):
         out = self.pad(x)
         out = self.conv(out)
@@ -38,13 +36,11 @@ class ConvBlock(nn.Module):
 # (Conv -> BN -> LeakyReLU) -> (StridedConv -> BN -> LeakyReLU)
 class DownsampleBlock(nn.Module):
 
-
     def __init__(self, in_channels, out_channels, kernel_size, scale_factor=2, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING):
         nn.Module.__init__(self)
 
         self.conv1 = ConvBlock(in_channels, out_channels, kernel_size, scale_factor, norm_layer, leaky_slope, pad_type)
         self.conv2 = ConvBlock(out_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type)
-
 
     def forward(self, x):
         out = self.conv1(x)
@@ -54,7 +50,6 @@ class DownsampleBlock(nn.Module):
 
 # BN -> (Conv -> BN -> LeakyReLU) -> (Conv -> BN -> LeakyReLU) -> Upsample
 class UpsampleBlock(nn.Module):
-
 
     def __init__(self, in_channels, out_channels, kernel_size, method, scale_factor=2, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING, skip_depth=0):
         nn.Module.__init__(self)
@@ -70,7 +65,6 @@ class UpsampleBlock(nn.Module):
         self.conv2 = ConvBlock(out_channels, out_channels, 1, 1, norm_layer, leaky_slope, pad_type)    # add 1x1 conv layer
 
         self.upsample = nn.Upsample(scale_factor=scale_factor, mode=method)
-
 
     def forward(self, x, skip_data=None):
         if self.skip_depth > 0:
@@ -88,12 +82,10 @@ class UpsampleBlock(nn.Module):
 # (Conv -> BN -> LeakyReLU)
 class SkipBlock(nn.Module):
 
-
     def __init__(self, in_channels, out_channels, kernel_size, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING):
         nn.Module.__init__(self)
 
         self.conv = ConvBlock(in_channels, out_channels, kernel_size, 1, norm_layer, leaky_slope, pad_type)
-
 
     def forward(self, x):
         out = self.conv(x)
