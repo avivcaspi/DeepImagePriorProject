@@ -48,7 +48,7 @@ class DownsampleBlock(nn.Module):
         return out
 
 
-# BN -> (Conv -> BN -> LeakyReLU) -> (Conv -> BN -> LeakyReLU) -> Upsample
+# Upsample -> BN -> (Conv -> BN -> LeakyReLU) -> (Conv -> BN -> LeakyReLU)
 class UpsampleBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size, method, scale_factor=2, norm_layer=nn.BatchNorm2d, leaky_slope=0.2, pad_type=REFLECTION_PADDING, skip_depth=0):

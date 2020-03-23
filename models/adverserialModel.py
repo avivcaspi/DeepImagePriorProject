@@ -5,26 +5,20 @@ import torch.nn as nn
 
 from torch.optim.optimizer import Optimizer
 from models.unet import UNet
-from skimage.metrics import peak_signal_noise_ratio
+from models.blocks import DownsampleBlock
 
 
 class Discriminator(nn.Module):
-    def __init__(self, in_size):
+    def __init__(self, in_size, nd, kd, leaky_slope=0.2):
         """
         :param in_size: The size of on input image (without batch dimension).
         """
         super().__init__()
         self.in_size = in_size
-        # TODO: Create the discriminator model layers.
-        #  To extract image features you can use the EncoderCNN from the VAE
-        #  section or implement something new.
-        #  You can then use either an affine layer or another conv layer to
-        #  flatten the features.
-        # ====== YOUR CODE: ======
         self.first_channels = in_size[0]
-        self.last_channels = 512
+        self.last_channels = 128
 
-        downscaling1 = nn.Sequential(
+        '''downscaling1 = nn.Sequential(
             nn.Conv2d(self.first_channels, 128, 4, stride=2, padding=1, bias=False),
             nn.LeakyReLU(0.2),
             nn.BatchNorm2d(128)
@@ -38,9 +32,16 @@ class Discriminator(nn.Module):
             nn.Conv2d(256, self.last_channels, 4, stride=2, padding=1, bias=False),
             nn.LeakyReLU(0.2),
             nn.BatchNorm2d(self.last_channels)
-        )
-        self.downscaler = nn.Sequential(downscaling1, downscaling2, downscaling3)
-        output_size = (in_size[1] // 8, in_size[2] // 8)
+        )'''
+        downsampler = []
+        last_depth = self.first_channels
+        for num_filters, kernel_size in zip(nd, kd):
+            layer = DownsampleBlock(last_depth, num_filters, kernel_size,
+                                    leaky_slope=leaky_slope) if num_filters > 0 else None
+            downsampler.append(layer)
+            last_depth = num_filters
+        self.downscaler = nn.Sequential(*downsampler)
+        output_size = (in_size[1] // (2 ** len(nd)), in_size[2] // (2 ** len(nd)))
         self.final_layer = nn.Linear(self.last_channels * output_size[0] * output_size[1], 1)
         # ========================
 
@@ -50,10 +51,6 @@ class Discriminator(nn.Module):
         :return: Discriminator class score (not probability) of
         shape (N,).
         """
-        # TODO: Implement discriminator forward pass.
-        #  No need to apply sigmoid to obtain probability - we'll combine it
-        #  with the loss due to improved numerical stability.
-        # ====== YOUR CODE: ======
         downscaled = self.downscaler(x)
         reshaped = downscaled.view([x.shape[0], -1])
         y = self.final_layer(reshaped)
