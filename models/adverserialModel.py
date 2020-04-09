@@ -16,23 +16,34 @@ class Discriminator(nn.Module):
         super().__init__()
         self.in_size = in_size
         self.first_channels = in_size[0]
-        self.last_channels = 512
+        self.last_channels = 256
 
         downscaling1 = nn.Sequential(
-            nn.Conv2d(self.first_channels, 128, 4, stride=2, padding=1, bias=False),
+            nn.Conv2d(self.first_channels, 64, 3, stride=2, padding=1, bias=True),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm2d(64),
+            nn.Conv2d(64, 64, 3, stride=1, padding=1, bias=True),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm2d(64)
+        )
+        
+        downscaling2 = nn.Sequential(
+            nn.Conv2d(64, 128, 3, stride=2, padding=1, bias=True),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm2d(128),
+            nn.Conv2d(128, 128, 3, stride=1, padding=1, bias=True),
             nn.LeakyReLU(0.2),
             nn.BatchNorm2d(128)
         )
-        downscaling2 = nn.Sequential(
-            nn.Conv2d(128, 256, 4, stride=2, padding=1, bias=False),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm2d(256)
-        )
+        
         downscaling3 = nn.Sequential(
-            nn.Conv2d(256, self.last_channels, 4, stride=2, padding=1, bias=False),
+            nn.Conv2d(128, 256, 3, stride=2, padding=1, bias=True),
             nn.LeakyReLU(0.2),
-            nn.BatchNorm2d(self.last_channels)
+            nn.BatchNorm2d(256),
+            nn.Conv2d(256, 256, 3, stride=1, padding=1, bias=True),
+            nn.LeakyReLU(0.2)
         )
+        
         self.downscaler = nn.Sequential(downscaling1, downscaling2, downscaling3)
         output_size = (in_size[1] // 8, in_size[2] // 8)
         self.final_layer = nn.Linear(self.last_channels * output_size[0] * output_size[1], 1)
