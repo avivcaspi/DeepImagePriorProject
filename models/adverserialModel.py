@@ -78,10 +78,6 @@ def discriminator_loss_fn(y_data, y_generated, data_label=0, label_noise=0.0):
     :return: The combined loss of both.
     """
     assert data_label == 1 or data_label == 0
-    # TODO:
-    #  Implement the discriminator loss.
-    #  See pytorch's BCEWithLogitsLoss for a numerically stable implementation.
-    # ====== YOUR CODE: ======
     device = y_data.device
     loss_fn = nn.BCEWithLogitsLoss()
     data_noise = torch.rand(*y_data.shape) * label_noise - (label_noise / 2)
@@ -104,15 +100,11 @@ def generator_loss_fn(y_generated, data_label=0):
     :return: The generator loss.
     """
     assert data_label == 1 or data_label == 0
-    # TODO:
-    #  Implement the Generator loss.
-    #  Think about what you need to compare the input to, in order to
-    #  formulate the loss in terms of Binary Cross Entropy.
-    # ====== YOUR CODE: ======
+
     device = y_generated.device
     loss_fn = nn.BCEWithLogitsLoss()
     loss = loss_fn(y_generated, torch.full_like(y_generated, data_label, device=device))
-    # ========================
+
     return loss
 
 
@@ -126,12 +118,7 @@ def train_batch(dsc_model: Discriminator, gen_model: UNet,
     generator.
     :return: The discriminator and generator losses.
     """
-
-    # TODO: Discriminator update
-    #  1. Show the discriminator real and generated data
-    #  2. Calculate discriminator loss
-    #  3. Update discriminator parameters
-    # ====== YOUR CODE: ======
+    # Discriminator
     dsc_optimizer.zero_grad()
 
     real_batch = target_img
@@ -146,13 +133,8 @@ def train_batch(dsc_model: Discriminator, gen_model: UNet,
     dsc_loss.backward()
 
     dsc_optimizer.step()
-    # ========================
 
-    # TODO: Generator update
-    #  1. Show the discriminator generated data
-    #  2. Calculate generator loss
-    #  3. Update generator parameters
-    # ====== YOUR CODE: ======
+    # Generator
     gen_optimizer.zero_grad()
 
     y_generated = dsc_model(generated_batch)
