@@ -16,7 +16,7 @@ and generating the input for each application
 
 src/*.ipynb - notebooks that present all application and training code
 
-src/report.pdf - The report of the project
+report.pdf - The report of the project
 
 
 Reproducing the results:
