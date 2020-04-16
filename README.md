@@ -21,13 +21,15 @@ report.pdf - The report of the project
 
 
 Reproducing the results:
-In order to reproduce all results, all you need to do is open one of the notebooks
-(one notebook for each application) and run the notebook from start to finish
-All the notebook will start by loading the images, regular training of the model and 
+In order to reproduce all of the results, you first need to install an anaconda environment
+from the file src/environment.yml , so that you will have all the required packages.
+After that, all you need to do is open one of the notebooks (one notebook for each 
+application) and run the notebook from start to finish.
+Every notebook will start by loading the images, regular training of the model and 
 presenting the results, than training with input optimization and presenting the results,
 and lastly adversarial training and showing the results.
-Please note that some of the training might take a long time, therefore we ran each notebook
-and uploaded all result to each notebook, so you can look at the notebooks results without
+Please note that some of the training might take a long time, so we ran each notebook
+and uploaded all result for each notebook, so you can look at the notebook results without
 running them.
 
 If you want to avoid training all the notebooks but still observe the results you can go to 
